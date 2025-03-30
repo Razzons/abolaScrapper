@@ -11,11 +11,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Configuração do logging
+# Logging
 logging.basicConfig(filename='scraping.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 def download_image(url, folder="images"):
-    if not url or not url.startswith("http"):  # Ignora imagens inline como data:image/svg+xml
+    if not url or not url.startswith("http"):
         return None
 
     if not os.path.exists(folder):
@@ -31,19 +31,22 @@ def download_image(url, folder="images"):
     return None
 
 def is_valid_news_link(link):
-    pattern = re.compile(r"https://www\.abola\.pt/.+/noticias/.+-\d+")
+    pattern = re.compile(r"https://www\\.abola\\.pt/.+/noticias/.+-\\d+")
     return bool(pattern.match(link))
 
 def scrape_abola():
     options = Options()
     options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     url = "https://www.abola.pt/"
     driver.get(url)
-    time.sleep(3)  # Aguarde um pouco para carregar a página completamente
+    time.sleep(3)
 
-    page_source = driver.page_source  # Captura o HTML da página inteira
+    page_source = driver.page_source
     driver.quit()
 
     soup = BeautifulSoup(page_source, 'html.parser')
@@ -57,7 +60,6 @@ def scrape_abola():
         raw_link = link_element['href']
         link = f"https://www.abola.pt{raw_link}" if raw_link.startswith("/") else raw_link
 
-        # Verifica se é um link válido de notícia
         if not is_valid_news_link(link):
             continue
 
@@ -65,9 +67,9 @@ def scrape_abola():
         image_url = image_element.get("data-src") or image_element.get("src") if image_element else None
         image_path = download_image(image_url) if image_url else None
 
-        # Obter o conteúdo da notícia e o título correto
         title = "Sem título"
         article_text = "Sem conteúdo"
+
         try:
             response = requests.get(link)
             article_soup = BeautifulSoup(response.text, 'html.parser')
@@ -87,18 +89,12 @@ def scrape_abola():
             "content": article_text
         })
 
-    # Nome do ficheiro com timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"abola_{timestamp}.json"
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(articles, f, ensure_ascii=False, indent=4)
 
-    logging.info(f"Dados estruturados do A Bola guardados em {filename}")
-
-def scheduler():
-    for _ in range(48):  # Executa durante 48 horas (1 vez por hora)
-        scrape_abola()
-        time.sleep(3600)
+    logging.info(f"Dados guardados em {filename}")
 
 if __name__ == "__main__":
-    scheduler()
+    scrape_abola()

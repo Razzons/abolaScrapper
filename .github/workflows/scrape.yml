@@ -31,7 +31,7 @@ jobs:
 
     - name: Executar o script com Selenium + Xvfb
       run: |
-        xvfb-run python abola_scraper.py
+        xvfb-run python abola_scrapper.py
 
     - name: Guardar os resultados
       uses: actions/upload-artifact@v3

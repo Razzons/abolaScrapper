@@ -101,4 +101,4 @@ def scheduler():
         time.sleep(3600)
 
 if __name__ == "__main__":
-    scheduler()
+    scrape_abola()

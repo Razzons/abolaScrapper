@@ -10,6 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import WebDriverException
 
 # Logging
 logging.basicConfig(filename='scraping.log', level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -40,19 +41,30 @@ def scrape_abola():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    try:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    except WebDriverException as e:
+        print("Erro ao iniciar Chrome:", e)
+        return
 
     url = "https://www.abola.pt/"
     driver.get(url)
-    time.sleep(3)
+    time.sleep(6)  # Mais tempo para carregar o conteúdo dinâmico
 
     page_source = driver.page_source
     driver.quit()
 
+    # DEBUG: salvar o HTML carregado para inspecionar
+    with open("debug_abola.html", "w", encoding="utf-8") as f:
+        f.write(page_source)
+
     soup = BeautifulSoup(page_source, 'html.parser')
     articles = []
 
-    for item in soup.select("article"):
+    article_blocks = soup.select("article")
+    print(f"Artigos encontrados: {len(article_blocks)}")
+
+    for item in article_blocks:
         link_element = item.find("a", href=True)
         if not link_element:
             continue
@@ -94,6 +106,7 @@ def scrape_abola():
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(articles, f, ensure_ascii=False, indent=4)
 
+    print(f"{len(articles)} artigos guardados em {filename}")
     logging.info(f"Dados guardados em {filename}")
 
 if __name__ == "__main__":

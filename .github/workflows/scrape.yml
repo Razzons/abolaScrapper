@@ -2,7 +2,7 @@ name: Run Abola Scraper with Selenium
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Executa a cada hora (UTC)
+    - cron: '*/5 * * * *'  # Executa a cada hora (UTC)
   workflow_dispatch:
 
 jobs:

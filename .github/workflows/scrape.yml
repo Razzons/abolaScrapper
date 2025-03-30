@@ -34,7 +34,7 @@ jobs:
         xvfb-run python abola_scrapper.py
 
     - name: Guardar os resultados
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: resultados-json
         path: abola_*.json
